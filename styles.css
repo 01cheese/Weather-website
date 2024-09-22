@@ -55,6 +55,12 @@ input::placeholder {
     cursor: pointer;
 }
 
+.weather__units span.active {
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+
 .weather__units span:first-child {
     margin-right: 0.5rem;
 }
