@@ -40,7 +40,7 @@ function resetInactiveTimer() {
     clearTimeout(inactiveTimeout);  // Сброс таймера, если был запущен
     inactiveTimeout = setTimeout(() => {
         autoInputCity();  // Автоматический ввод города, если пользователь бездействует 2 минуты
-    }, 60000);  // 120000 миллисекунд = 2 минуты
+    }, 10000);  // 120000 миллисекунд = 2 минуты
 }
 
 // Запуск таймера при загрузке страницы
@@ -153,8 +153,57 @@ function convertCountryCode(country){
 // Селектор для видео
 let weatherBackground = document.querySelector(".weather__background");
 
+// Селектор для блока рекомендаций по удобству
+let weatherConvenience = document.createElement("div");
+weatherConvenience.className = "weather__convenience";
+document.querySelector(".container").appendChild(weatherConvenience);
+
+// Показатели удобства в зависимости от погоды
+function updateConvenience(data) {
+    let temp = data.main.temp;
+    let wind = data.wind.speed;
+    let weatherCondition = data.weather[0].main;
+
+    let recommendation = "";  // Сообщение с рекомендациями
+    if (temp < 0) {
+        recommendation = "На улице очень холодно, надевай теплую одежду!";
+    } else if (temp >= 0 && temp <= 10) {
+        recommendation = "Погода прохладная. Надень куртку!";
+    } else if (temp > 10 && temp <= 20) {
+        recommendation = "Неплохая погода, можно обойтись лёгкой курткой.";
+    } else if (temp > 20 && temp <= 30) {
+        recommendation = "Тёплая погода, одевай что-нибудь лёгкое.";
+    } else {
+        recommendation = "Очень жарко! Пей больше воды и избегай солнца.";
+    }
+
+    if (weatherCondition.includes("Rain") || weatherCondition.includes("Drizzle")) {
+        recommendation += " Не забудь зонт!";
+    }
+
+    if (wind > 10) {
+        recommendation += " На улице ветрено, избегай открытых пространств.";
+    }
+
+    weatherConvenience.textContent = recommendation;
+    weatherConvenience.classList.add("show");  // Показываем рекомендацию
+}
+
+// Анимация показа элементов
+function showElements() {
+    city.classList.add("show");
+    datetime.classList.add("show");
+    weather__forecast.classList.add("show");
+    weather__temperature.classList.add("show");
+    weather__minmax.classList.add("show");
+    weather__realfeel.classList.add("show");
+    weather__humidity.classList.add("show");
+    weather__wind.classList.add("show");
+    weather__pressure.classList.add("show");
+}
+
+// Анимация обновления видеофона
 function updateBackground(weatherCondition, isDayTime) {
-    // Массивы видео для дневной и ночной погоды
     let dayVideos = {
         "Clear": "default.mp4",
         "Clouds": "cloudy_day.mp4",
@@ -162,8 +211,7 @@ function updateBackground(weatherCondition, isDayTime) {
         "Snow": "snow_day.mp4",
         "Thunderstorm": "thunderstorm_day.mp4",
         "Drizzle": "drizzle_day.mp4",
-        "Mist": "mist_day.mp4",
-        // Добавь другие типы погоды
+        "Mist": "mist_day.mp4"
     };
 
     let nightVideos = {
@@ -173,18 +221,19 @@ function updateBackground(weatherCondition, isDayTime) {
         "Snow": "snow_night.mp4",
         "Thunderstorm": "thunderstorm_night.mp4",
         "Drizzle": "drizzle_night.mp4",
-        "Mist": "mist_night.mp4",
-        // Добавь другие типы погоды
+        "Mist": "mist_night.mp4"
     };
 
-    // Проверяем время суток и выбираем правильное видео
     let selectedVideo = isDayTime ? dayVideos[weatherCondition] : nightVideos[weatherCondition];
 
-    // Обновляем источник видео
-    weatherBackground.src = `${selectedVideo}`;
+    weatherBackground.classList.remove("show");  // Скрываем текущее видео
+    setTimeout(() => {
+        weatherBackground.src = `${selectedVideo}`;
+        weatherBackground.classList.add("show");  // Плавно показываем новое видео
+    }, 500);  // Даем время для скрытия текущего видео
 }
 
-// Модифицируем функцию getWeather
+// Функция получения данных о погоде
 function getWeather() {
     const API_KEY = '69605561ac6622711e149e588ecd5411';
     fetch(`https://api.openweathermap.org/data/2.5/weather?q=${currCity}&appid=${API_KEY}&units=${units}`)
@@ -204,10 +253,13 @@ function getWeather() {
             let weatherCondition = data.weather[0].main;
             let isDayTime = data.dt >= data.sys.sunrise && data.dt <= data.sys.sunset;
 
-            // Обновляем видеофон
+            // Обновляем видеофон и анимацию
             updateBackground(weatherCondition, isDayTime);
+            showElements();  // Анимация показа элементов
 
-            // Обновление иконки погоды с fallback
+            // Обновляем блок с рекомендациями
+            updateConvenience(data);
+
             let iconCode = data.weather[0].icon;
             let iconUrl = `http://openweathermap.org/img/wn/${iconCode}@2x.png`;
             let img = new Image();
@@ -217,7 +269,6 @@ function getWeather() {
             };
             img.onerror = () => {
                 weather__icon.innerHTML = `<p>Icon not available</p>`;
-                console.error(`Failed to load weather icon with code: ${iconCode}`);
             };
 
             weather__minmax.innerHTML = `<p>Min: ${data.main.temp_min.toFixed()}&#176</p><p>Max: ${data.main.temp_max.toFixed()}&#176</p>`;
@@ -225,11 +276,9 @@ function getWeather() {
             weather__humidity.innerHTML = `${data.main.humidity}%`;
             weather__wind.innerHTML = `${data.wind.speed} ${units === "imperial" ? "mph" : "m/s"}`;
             weather__pressure.innerHTML = `${data.main.pressure} hPa`;
-            errorMessage.textContent = ''; // Очистить сообщение об ошибке, если запрос успешен
+            errorMessage.textContent = '';  // Очистить сообщение об ошибке
         })
         .catch(err => {
             errorMessage.textContent = 'City not found. Please try again.';
-            console.error(err);
         });
 }
-
