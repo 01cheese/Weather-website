@@ -1,23 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
 
-/* Основные стили */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: 'Poppins', sans-serif;
-}
-
-/* Контейнер с контентом */
-.container {
-    background: rgba(23, 23, 23, 0.8);  /* Прозрачность фона, чтобы видеть видео */
-    color: #fff;
-    padding: 2rem;
-    width: 40%;
-    margin: 4rem auto;
-    border-radius: 10px;
-    position: relative;
-    z-index: 1;  /* Контейнер выше видео */
 }
 
 /* Анимации для плавных переходов текста */
@@ -34,30 +21,44 @@
 
 /* Плавное переключение видео */
 .weather__background {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    z-index: -1;  /* Видео на заднем плане */
-    opacity: 0;
     transition: opacity 1s ease-in-out;
+    opacity: 0;
 }
 
 .weather__background.show {
     opacity: 1;
 }
 
-/* Стили для заголовка и формы поиска */
+/* Стиль для блока рекомендаций */
+.weather__convenience {
+    background: #2a2a2a;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-top: 1rem;
+    font-size: 1rem;
+    text-align: center;
+    display: none;  /* Скрываем до получения данных */
+    transition: all 0.5s ease-in-out;
+}
+
+.weather__convenience.show {
+    display: block;
+}
+
+
+.container {
+    background: #171717;
+    color: #fff;
+    padding: 2rem;
+    width: 40%;
+    margin: 4rem auto;
+    border-radius: 10px;
+}
+
 .weather__header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-}
-
-.weather__search {
-    position: relative;
 }
 
 input {
@@ -71,6 +72,10 @@ input {
 
 input::placeholder {
     color: #fff;
+}
+
+.weather__search {
+    position: relative;
 }
 
 .weather__search i {
@@ -94,11 +99,11 @@ input::placeholder {
     text-decoration: underline;
 }
 
+
 .weather__units span:first-child {
     margin-right: 0.5rem;
 }
 
-/* Тело с данными о погоде */
 .weather__body {
     text-align: center;
     margin-top: 3rem;
@@ -134,7 +139,6 @@ input::placeholder {
     margin: 0.5rem;
 }
 
-/* Информация о погоде */
 .weather__info {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -159,7 +163,6 @@ input::placeholder {
     font-size: 14px;
 }
 
-/* Подсказки для автозаполнения поиска */
 .search__suggestions {
     position: absolute;
     top: 50px;
@@ -186,25 +189,18 @@ input::placeholder {
     font-size: 14px;
     margin-top: 5px;
 }
-
-/* Стиль для блока рекомендаций */
-.weather__convenience {
-    background: #2a2a2a;
-    padding: 1rem;
-    border-radius: 10px;
-    margin-top: 1rem;
-    font-size: 1rem;
-    text-align: center;
-    display: none;  /* Скрываем до получения данных */
-    transition: all 0.5s ease-in-out;
+.weather__background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1;
 }
 
-.weather__convenience.show {
-    display: block;
-}
 
-/* Адаптивные стили для планшетов и мобильных устройств */
-@media(max-width: 936px) {
+@media(max-width: 936px){
     .container {
         width: 90%;
     }
@@ -218,29 +214,9 @@ input::placeholder {
     }
 }
 
-@media(max-width: 400px) {
+
+@media(max-width: 400px){
     .weather__info {
         grid-template-columns: none;
-    }
-
-    .weather__background {
-        object-fit: cover; /* Обеспечиваем корректное отображение видео */
-    }
-
-    .container {
-        padding: 1rem;
-        margin: 2rem auto;
-    }
-
-    .weather__temperature {
-        font-size: 1.5rem;
-    }
-
-    .weather__card i {
-        font-size: 1.25rem;
-    }
-
-    .weather__minmax p {
-        font-size: 12px;
     }
 }
