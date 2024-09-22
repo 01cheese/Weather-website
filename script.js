@@ -1,5 +1,5 @@
 // state
-let currCity = "London";
+let currCity = "London";  // Город по умолчанию
 let units = "metric";
 
 // Selectors
@@ -21,30 +21,62 @@ let errorMessage = document.createElement("p");
 errorMessage.className = "error-message";
 document.querySelector(".weather__search").appendChild(errorMessage);
 
+// При загрузке страницы загрузим информацию по городу по умолчанию
+document.addEventListener('DOMContentLoaded', () => {
+    searchInput.value = currCity;  // Заполнить поле города значением по умолчанию
+    getWeather();  // Загрузить погоду
+});
+
 // search
 document.querySelector(".weather__search").addEventListener('submit', e => {
     e.preventDefault();
     currCity = searchInput.value;
     getWeather();
     searchInput.value = "";
-})
+});
 
-// Autocomplete function to fetch city suggestions
+// Автозаполнение для предложений
 searchInput.addEventListener('input', () => {
     let query = searchInput.value;
-    if (query.length > 2) { // Start fetching suggestions when user types more than 2 characters
+    if (query.length > 2) { // Минимум 3 символа для автоподбора
         fetchSuggestions(query);
     } else {
-        searchSuggestions.innerHTML = ''; // Clear suggestions when input is too short
+        searchSuggestions.innerHTML = ''; // Очистить предложения, если ввода недостаточно
     }
 });
+
+
+// Add these two selectors for the Celsius and Fahrenheit unit elements
+let unitCelsius = document.querySelector(".weather_unit_celsius");
+let unitFahrenheit = document.querySelector(".weather_unit_farenheit");
+
+// Function to switch between units
+unitCelsius.addEventListener('click', () => {
+    if (units !== "metric") {
+        units = "metric";  // Switch to Celsius
+        unitCelsius.classList.add("active");
+        unitFahrenheit.classList.remove("active");
+        getWeather();  // Fetch the weather data again with the new units
+    }
+});
+
+unitFahrenheit.addEventListener('click', () => {
+    if (units !== "imperial") {
+        units = "imperial";  // Switch to Fahrenheit
+        unitCelsius.classList.remove("active");
+        unitFahrenheit.classList.add("active");
+        getWeather();  // Fetch the weather data again with the new units
+    }
+});
+
+
 
 function fetchSuggestions(query) {
     const API_KEY = '69605561ac6622711e149e588ecd5411';
     fetch(`https://api.openweathermap.org/data/2.5/find?q=${query}&type=like&sort=population&appid=${API_KEY}`)
         .then(res => res.json())
         .then(data => {
-            searchSuggestions.innerHTML = ''; // Clear previous suggestions
+            searchSuggestions.innerHTML = ''; // Очистить предыдущие предложения
             if (data.count > 0) {
                 data.list.forEach(city => {
                     let suggestion = document.createElement("p");
@@ -52,7 +84,7 @@ function fetchSuggestions(query) {
                     suggestion.addEventListener('click', () => {
                         currCity = city.name;
                         getWeather();
-                        searchSuggestions.innerHTML = ''; // Clear suggestions after selection
+                        searchSuggestions.innerHTML = ''; // Очистить предложения после выбора
                     });
                     searchSuggestions.appendChild(suggestion);
                 });
@@ -81,13 +113,14 @@ function convertTimeStamp(timestamp, timezone){
     return date.toLocaleString("en-US", options);
 }
 
-// convert country code to name
+// Преобразование кода страны в название
 function convertCountryCode(country){
     let regionNames = new Intl.DisplayNames(["en"], {type: "region"});
     return regionNames.of(country);
 }
 
-function getWeather(){
+// Функция получения данных о погоде
+function getWeather() {
     const API_KEY = '69605561ac6622711e149e588ecd5411';
     fetch(`https://api.openweathermap.org/data/2.5/weather?q=${currCity}&appid=${API_KEY}&units=${units}`)
         .then(res => {
@@ -101,13 +134,26 @@ function getWeather(){
             datetime.innerHTML = convertTimeStamp(data.dt, data.timezone);
             weather__forecast.innerHTML = `<p>${data.weather[0].main}</p>`;
             weather__temperature.innerHTML = `${data.main.temp.toFixed()}&#176`;
-            weather__icon.innerHTML = `<img src="http://openweathermap.org/img/wn/${data.weather[0].icon}@4x.png" />`;
+
+            // Обновление иконки погоды с fallback
+            let iconCode = data.weather[0].icon;
+            let iconUrl = `http://openweathermap.org/img/wn/${iconCode}@2x.png`;
+            let img = new Image();
+            img.src = iconUrl;
+            img.onload = () => {
+                weather__icon.innerHTML = `<img src="${iconUrl}" alt="Weather icon">`;
+            };
+            img.onerror = () => {
+                weather__icon.innerHTML = `<p>Icon not available</p>`;
+                console.error(`Failed to load weather icon with code: ${iconCode}`);
+            };
+
             weather__minmax.innerHTML = `<p>Min: ${data.main.temp_min.toFixed()}&#176</p><p>Max: ${data.main.temp_max.toFixed()}&#176</p>`;
             weather__realfeel.innerHTML = `${data.main.feels_like.toFixed()}&#176`;
             weather__humidity.innerHTML = `${data.main.humidity}%`;
             weather__wind.innerHTML = `${data.wind.speed} ${units === "imperial" ? "mph" : "m/s"}`;
             weather__pressure.innerHTML = `${data.main.pressure} hPa`;
-            errorMessage.textContent = ''; // Clear error message if successful
+            errorMessage.textContent = ''; // Очистить сообщение об ошибке, если запрос успешен
         })
         .catch(err => {
             errorMessage.textContent = 'City not found. Please try again.';
