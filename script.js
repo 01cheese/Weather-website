@@ -1,8 +1,10 @@
 // state
 let currCity = "London";  // Город по умолчанию
 let units = "metric";
+let inactiveTimeout;
 
 // Selectors
+
 let city = document.querySelector(".weather__city");
 let datetime = document.querySelector(".weather__datetime");
 let weather__forecast = document.querySelector('.weather__forecast');
@@ -21,11 +23,37 @@ let errorMessage = document.createElement("p");
 errorMessage.className = "error-message";
 document.querySelector(".weather__search").appendChild(errorMessage);
 
-// При загрузке страницы загрузим информацию по городу по умолчанию
+
+// Добавляем случайные города, которые сайт будет вводить
+const randomCities = ["Paris", "New York", "Tokyo", "Sydney", "Moscow", "Rio de Janeiro", "Berlin", "Toronto", "Rome", "Istanbul"];
+
+// Функция, которая выбирает случайный город и запрашивает погоду
+function autoInputCity() {
+    let randomCity = randomCities[Math.floor(Math.random() * randomCities.length)];
+    searchInput.value = randomCity;  // Вводим случайный город
+    currCity = randomCity;  // Обновляем текущий город
+    getWeather();  // Запрашиваем погоду для этого города
+}
+
+// Функция сброса таймера активности
+function resetInactiveTimer() {
+    clearTimeout(inactiveTimeout);  // Сброс таймера, если был запущен
+    inactiveTimeout = setTimeout(() => {
+        autoInputCity();  // Автоматический ввод города, если пользователь бездействует 2 минуты
+    }, 60000);  // 120000 миллисекунд = 2 минуты
+}
+
+// Запуск таймера при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
-    searchInput.value = currCity;  // Заполнить поле города значением по умолчанию
-    getWeather();  // Загрузить погоду
+    resetInactiveTimer();  // Запускаем таймер бездействия
+    getWeather();  // Загружаем погоду для города по умолчанию
 });
+
+// Отслеживание активности пользователя
+['mousemove', 'keydown', 'scroll', 'click'].forEach(event => {
+    document.addEventListener(event, resetInactiveTimer);
+});
+
 
 // search
 document.querySelector(".weather__search").addEventListener('submit', e => {
@@ -120,46 +148,7 @@ function convertCountryCode(country){
 }
 
 // Функция получения данных о погоде
-function getWeather() {
-    const API_KEY = '69605561ac6622711e149e588ecd5411';
-    fetch(`https://api.openweathermap.org/data/2.5/weather?q=${currCity}&appid=${API_KEY}&units=${units}`)
-        .then(res => {
-            if (!res.ok) {
-                throw new Error("City not found");
-            }
-            return res.json();
-        })
-        .then(data => {
-            city.innerHTML = `${data.name}, ${convertCountryCode(data.sys.country)}`;
-            datetime.innerHTML = convertTimeStamp(data.dt, data.timezone);
-            weather__forecast.innerHTML = `<p>${data.weather[0].main}</p>`;
-            weather__temperature.innerHTML = `${data.main.temp.toFixed()}&#176`;
 
-            // Обновление иконки погоды с fallback
-            let iconCode = data.weather[0].icon;
-            let iconUrl = `http://openweathermap.org/img/wn/${iconCode}@2x.png`;
-            let img = new Image();
-            img.src = iconUrl;
-            img.onload = () => {
-                weather__icon.innerHTML = `<img src="${iconUrl}" alt="Weather icon">`;
-            };
-            img.onerror = () => {
-                weather__icon.innerHTML = `<p>Icon not available</p>`;
-                console.error(`Failed to load weather icon with code: ${iconCode}`);
-            };
-
-            weather__minmax.innerHTML = `<p>Min: ${data.main.temp_min.toFixed()}&#176</p><p>Max: ${data.main.temp_max.toFixed()}&#176</p>`;
-            weather__realfeel.innerHTML = `${data.main.feels_like.toFixed()}&#176`;
-            weather__humidity.innerHTML = `${data.main.humidity}%`;
-            weather__wind.innerHTML = `${data.wind.speed} ${units === "imperial" ? "mph" : "m/s"}`;
-            weather__pressure.innerHTML = `${data.main.pressure} hPa`;
-            errorMessage.textContent = ''; // Очистить сообщение об ошибке, если запрос успешен
-        })
-        .catch(err => {
-            errorMessage.textContent = 'City not found. Please try again.';
-            console.error(err);
-        });
-}
 
 // Селектор для видео
 let weatherBackground = document.querySelector(".weather__background");
