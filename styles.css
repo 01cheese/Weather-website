@@ -124,6 +124,34 @@ input::placeholder {
     font-size: 14px;
 }
 
+.search__suggestions {
+    position: absolute;
+    top: 50px;
+    background-color: #1e1e1e;
+    color: #fff;
+    width: 100%;
+    max-height: 150px;
+    overflow-y: auto;
+    border-radius: 5px;
+    z-index: 10;
+}
+
+.search__suggestions p {
+    padding: 10px;
+    cursor: pointer;
+}
+
+.search__suggestions p:hover {
+    background-color: #333;
+}
+
+.error-message {
+    color: red;
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+
 @media(max-width: 936px){
     .container {
         width: 90%;
